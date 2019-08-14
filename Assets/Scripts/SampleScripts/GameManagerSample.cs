@@ -11,11 +11,18 @@ public class GameManagerSample : MonoBehaviour
     private void Awake()
     {
         UIManager = GetComponent<GameUIManagerSample>();
-        SetStateEvent();
-        SetUIEvent();
-    }
-    private void Start()
-    {
+        GameState.Subscribe(state => {
+            switch (state)
+            {
+                case StageState.Play:
+                    OnPlay();
+                    break;
+                case StageState.Clear:
+                    OnClear();
+                    break;
+            }
+        });
+        UIManager.NextButtonClickObservable().Subscribe(_ => LoadNext());
         LoadStage(1);
     }
     private void LoadNext()
@@ -39,28 +46,10 @@ public class GameManagerSample : MonoBehaviour
             StageManagerAbstract.NowStageState(state => {
                 GameState.Value = state;
             });
-            OnLoadStage(StageManagerSample.GetSingleton());
+            OnLoadStageComplete(StageManagerSample.GetSingleton());
         };
     }
-    private void SetStateEvent()
-    {
-        GameState.Subscribe(state => {
-            switch (state)
-            {
-                case StageState.Play:
-                    OnPlay();
-                    break;
-                case StageState.Clear:
-                    OnClear();
-                    break;
-            }
-        });
-    }
-    private void SetUIEvent()
-    {
-        UIManager.NextButtonClickObservable().Subscribe(_ => LoadNext());
-    }
-    private void OnLoadStage(StageManagerSample stage)
+    private void OnLoadStageComplete(StageManagerSample stage)
     {
         stage
             .OnTouchObservable()
